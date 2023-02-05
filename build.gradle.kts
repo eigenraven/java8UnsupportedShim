@@ -1,6 +1,7 @@
 plugins {
   `java-library`
   `maven-publish`
+  signing
 }
 
 java {
@@ -9,15 +10,22 @@ java {
     vendor.set(JvmVendorSpec.ADOPTIUM)
   }
   withSourcesJar()
+  withJavadocJar()
 }
 
 group = "me.eigenraven.java8unsupported"
 version = "1.0.0"
 
+signing {
+  useGpgCmd()
+  sign(configurations.archives.get())
+}
+
 publishing {
   publications {
     create<MavenPublication>("maven") {
       from(components["java"])
+      signing.sign(this)
 
       artifactId = "java-8-unsupported-shim"
 
@@ -48,12 +56,20 @@ publishing {
   }
 
   repositories {
-    maven {
+    /*maven {
       name = "GitHubPackages"
       url = uri("https://maven.pkg.github.com/eigenraven/java8UnsupportedShim")
       credentials {
         username = project.findProperty("gpr.user") as String? ?: System.getenv("USERNAME")
         password = project.findProperty("gpr.key") as String? ?: System.getenv("TOKEN")
+      }
+    }*/
+    maven {
+      name = "OSSRH"
+      url = uri("https://s01.oss.sonatype.org/service/local/staging/deploy/maven2/")
+      credentials {
+        username = properties.getOrDefault("ossrhUsername", "").toString()
+        password = properties.getOrDefault("ossrhPassword", "").toString()
       }
     }
   }
